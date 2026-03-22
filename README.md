@@ -1,35 +1,32 @@
-# Lotto Max OLG Scraper
+# Lotto Scraper
 
-A Python CLI tool that pulls **past Lotto Max winning numbers** from OLG's internal gateway API and stores them in a local **SQLite** database.
+A Python CLI toolset that pulls **past Lotto Max winning numbers** storing them in a local **SQLite** database.
+
+---
+
+## Data Coverage
+
+- **2025-02 to Present**: Full detail (MaxMillions, Prize Breakdowns) 
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Install the only dependency
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Fetch draws from 2024-01-01 to today (stored in lotto_max.db)
-python main.py --start 2024-01-01
+# 2. Run the historical backfill
+python historical_scraper.py
 
-# 3. Inspect the database
-sqlite3 lotto_max.db "SELECT * FROM draws LIMIT 5;"
+# 3. Fetch recent data from OLG
+python main.py --start 2025-01-01
+
+# 4. Inspect the database
+sqlite3 lotto_max.db "SELECT COUNT(*) FROM draws;"
 ```
 
 ---
-
-## Usage
-
-```
-python main.py [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--db PATH]
-```
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--start` | `2019-01-01` | Earliest draw date to fetch |
-| `--end` | today | Latest draw date to fetch (inclusive) |
-| `--db` | `lotto_max.db` | SQLite database file path |
 
 **Examples**
 
@@ -82,16 +79,3 @@ prize_breakdown     — prize tier info per draw
 > **Note**: The OLG gateway requires specific HTTP headers (`x-client-id`, `x-site-code`, etc.) extracted from their public website. If the API starts returning `401`, update `OLG_CLIENT_ID` in `config.py` with the value found by inspecting network traffic on [olg.ca](https://www.olg.ca/en/lottery/play-lotto-max-encore/past-results.html).
 
 ---
-
-## File Structure
-
-```
-numberChurner/
-├── config.py          # API URL, headers builder, defaults
-├── db.py              # SQLite schema + upsert helpers
-├── scraper.py         # HTTP fetcher + JSON parser + month iterator
-├── main.py            # CLI entry point (argparse)
-├── requirements.txt   # pip dependencies
-├── CHECKPOINT.md      # AI-readable project context for resuming work
-└── README.md
-```

@@ -88,8 +88,8 @@ def parse_year_page(html: str, year: int) -> List[Dict[str, Any]]:
     Parse all draw rows from a lottomaxnumbers.com year page.
     Returns a list of draw dicts compatible with db.upsert_draw().
     """
-    soup = BeautifulSoup(html, "html.parser")
-    table = soup.find("table", class_="resultsTable")
+    soup = BeautifulSoup(html, "lxml")
+    table = soup.find("table", class_="archiveResults")
     if not table:
         return []
 
@@ -103,21 +103,26 @@ def parse_year_page(html: str, year: int) -> List[Dict[str, Any]]:
 
         # ── Draw date ─────────────────────────────────────────────────────────
         date_cell = cols[0]
-        # The date text is in a link; strip badge text ("With Max Millions!")
+        # Date is the link text inside td.colour: "December 29 2023"
         date_link = date_cell.find("a")
-        raw_date_text = date_link.get_text(separator=" ", strip=True) if date_link else date_cell.get_text(strip=True)
+        raw_date_text = date_link.get_text(strip=True) if date_link else date_cell.get_text(strip=True)
         draw_date = _parse_date(raw_date_text)
         if not draw_date:
             continue  # couldn't parse date, skip
 
         # ── Numbers ───────────────────────────────────────────────────────────
         number_cell = cols[1]
-        balls      = number_cell.find_all("li", class_="ball")
+        # Main balls: <li class="ball ball"> (two classes, both "ball")
+        # Bonus ball: <li class="ball bonus-ball">  — exclude these
         bonus_ball = number_cell.find("li", class_="bonus-ball")
+        # find_all with class_="ball" matches any li that HAS the class "ball",
+        # including bonus-ball. Exclude bonus explicitly.
+        all_balls = number_cell.find_all("li", class_="ball")
+        main_balls = [b for b in all_balls if "bonus-ball" not in b.get("class", [])]
 
         main_nums = ",".join(
-            b.get_text(strip=True).zfill(2) for b in balls
-        ) if balls else ""
+            b.get_text(strip=True).zfill(2) for b in main_balls
+        ) if main_balls else ""
 
         bonus_num = bonus_ball.get_text(strip=True).zfill(2) if bonus_ball else ""
 

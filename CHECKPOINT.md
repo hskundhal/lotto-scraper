@@ -111,14 +111,21 @@ GET https://gateway.www.olg.ca/feeds/past-winning-numbers
 - `parse_draws(api_json)` → extracts draw list from JSON path `response.winnings.lottomax.draw[]`
 - `scrape_range(conn, start_date, end_date)` → main loop: generates list of (year, month) tuples, fetches, parses, upserts, prints progress; returns `(inserted, skipped)`
 
+### `historical_scraper.py`
+- Scrapes `lottomaxnumbers.com/numbers/YYYY` via BeautifulSoup (BS4).
+- Backfills data from **2009 to 2024**.
+- Focuses on `draw_date`, `main_numbers`, and `bonus_number`.
+- Uses `archiveResults` table class and `ball ball` / `bonus-ball` list item classes.
+
 ### `main.py`
-- `argparse` CLI: `--start`, `--end`, `--db`
-- Calls `get_connection` → `init_db` → `scrape_range` → prints summary
-- Entry point: `python main.py`
+- CLI entry point for OLG Gateway API (`scraper.py`).
+- Pulls rich data (prizes, MaxMillions, Encore) from **2025-present**.
 
 ### `requirements.txt`
 ```
 requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
 ```
 
 ---
